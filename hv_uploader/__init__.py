@@ -31,7 +31,7 @@ import stat
 import sys
 import tempfile
 import time
-import urlparse
+import urllib.parse as urlparse
 import zipfile
 
 import requests
@@ -196,8 +196,8 @@ def upload(input_dir, output_dirs=None, name=None, owner=None, generators=None, 
                         token = f.read()
 
             if token is None:
-                print "Please provide a user token from enzienaudio.com. " \
-                "Create or copy one from https://enzienaudio.com/getmytokens/."
+                print("Please provide a user token from enzienaudio.com. " \
+                "Create or copy one from https://enzienaudio.com/getmytokens/.")
                 token = getpass.getpass("Enter user token: ")
 
                 # write token to file
@@ -224,7 +224,7 @@ def upload(input_dir, output_dirs=None, name=None, owner=None, generators=None, 
                 # if an owner is not supplied, default to the user name in the token
                 owner = payload["name"]
         except Exception as e:
-            print "The user token is invalid. Generate a new one at https://enzienaudio.com/h/<username>/settings/."
+            print("The user token is invalid. Generate a new one at https://enzienaudio.com/h/<username>/settings/.")
             exit_code = ErrorCodes.CODE_INVALID_TOKEN
             raise e
 
@@ -241,7 +241,7 @@ def upload(input_dir, output_dirs=None, name=None, owner=None, generators=None, 
 
                 assert "service" in payload, "'service' field required in service token payload."
             except Exception as e:
-                print "The supplied service token is invalid. A default token will be used."
+                print("The supplied service token is invalid. A default token will be used.")
                 service_token = __HV_UPLOADER_SERVICE_TOKEN
         else:
             service_token = __HV_UPLOADER_SERVICE_TOKEN
@@ -258,23 +258,23 @@ def upload(input_dir, output_dirs=None, name=None, owner=None, generators=None, 
                     today = datetime.datetime.now()
                     valid_until = datetime.datetime.strptime(releases_json[release]["validUntil"], "%Y-%m-%d")
                     if today > valid_until:
-                        print "{0}Warning:{1} The release \"{2}\" expired on {3}. It may be removed at any time!".format(
+                        print("{0}Warning:{1} The release \"{2}\" expired on {3}. It may be removed at any time!".format(
                             Colours.yellow, Colours.end,
                             release,
-                            releases_json[release]["validUntil"])
+                            releases_json[release]["validUntil"]))
                     elif (valid_until - today) <= datetime.timedelta(weeks=4):
-                        print "{0}Warning:{1} The release \"{2}\" will expire soon on {3}.".format(
+                        print ("{0}Warning:{1} The release \"{2}\" will expire soon on {3}.".format(
                             Colours.yellow, Colours.end,
                             release,
-                            releases_json[release]["validUntil"])
+                            releases_json[release]["validUntil"]))
                 else:
-                    print "{0}Error:{1} The release \"{2}\" is not available. Available releases are:".format(
+                    print ("{0}Error:{1} The release \"{2}\" is not available. Available releases are:".format(
                         Colours.red, Colours.end,
-                        release)
+                        release))
                     for k,v in releases_json.items():
-                        print "* {0} ({1})".format(
+                        print ("* {0} ({1})".format(
                             k,
-                            v["releaseDate"])
+                            v["releaseDate"]))
                     raise UploaderException(ErrorCodes.CODE_RELEASE_NOT_AVAILABLE)
 
             post_data["release"] = release
@@ -362,25 +362,25 @@ def upload(input_dir, output_dirs=None, name=None, owner=None, generators=None, 
         # decode the JSON API response (See below for an example response)
         reply_json = r.json()
         if verbose:
-            print json.dumps(reply_json, sort_keys=True, indent=2, separators=(",", ": "))
+            print(json.dumps(reply_json, sort_keys=True, indent=2, separators=(",", ": ")))
 
         # print any warnings
         for i,x in enumerate(reply_json.get("warnings",[])):
-            print "{3}) {0}Warning:{1} {2}".format(
-                Colours.yellow, Colours.end, x["detail"], i+1)
+            print("{3}) {0}Warning:{1} {2}".format(
+                Colours.yellow, Colours.end, x["detail"], i+1))
 
         # check for errors
         if len(reply_json.get("errors",[])) > 0:
             for i,x in enumerate(reply_json["errors"]):
-                print "{3}) {0}Error:{1} {2}".format(
-                    Colours.red, Colours.end, x["detail"], i+1)
+                print ("{3}) {0}Error:{1} {2}".format(
+                    Colours.red, Colours.end, x["detail"], i+1))
             raise UploaderException(ErrorCodes.CODE_HEAVY_COMPILE_ERRORS)
 
-        print "Job URL:", urlparse.urljoin(domain, reply_json["data"]["links"]["html"])
-        print "Heavy release:", reply_json["data"]["attributes"]["release"]
+        print ("Job URL:", urlparse.urljoin(domain, reply_json["data"]["links"]["html"]))
+        print ("Heavy release:", reply_json["data"]["attributes"]["release"])
 
         if len(generators) > 0:
-            print "Downloaded files placed in:"
+            print("Downloaded files placed in:")
 
             # retrieve all requested files
             for i,g in enumerate(generators):
@@ -426,35 +426,35 @@ def upload(input_dir, output_dirs=None, name=None, owner=None, generators=None, 
                                 if not f.endswith(keep_files):
                                     os.remove(os.path.join(target_dir, f))
 
-                    print "  * {0}: {1}".format(g, target_dir)
+                    print ("  * {0}: {1}".format(g, target_dir))
                 else:
-                    print "  * {0}Warning:{1} {2} files could not be retrieved.".format(
+                    print ("  * {0}Warning:{1} {2} files could not be retrieved.".format(
                         Colours.yellow, Colours.end,
-                        g)
+                        g))
 
-        print "Total request time: {0}ms".format(int(1000.0*(time.time()-tick)))
+        print ("Total request time: {0}ms".format(int(1000.0*(time.time()-tick))))
 
     except UploaderException as e:
         exit_code = e.code
         if e.message:
-            print "{0}Error:{1} {2}".format(Colours.red, Colours.end, e.message)
+            print ("{0}Error:{1} {2}".format(Colours.red, Colours.end, e.message))
     except requests.ConnectionError as e:
-        print "{0}Error:{1} Could not connect to server. Is the server down? Is the internet down?\n{2}".format(Colours.red, Colours.end, e)
+        print ("{0}Error:{1} Could not connect to server. Is the server down? Is the internet down?\n{2}".format(Colours.red, Colours.end, e))
         exit_code = ErrorCodes.CODE_CONNECTION_ERROR
     except requests.Timeout as e:
-        print "{0}Error:{1} Connection to server timed out. The server might be overloaded. Try again later?\n{2}".format(Colours.red, Colours.end, e)
+        print ("{0}Error:{1} Connection to server timed out. The server might be overloaded. Try again later?\n{2}".format(Colours.red, Colours.end, e))
         exit_code = ErrorCodes.CODE_CONNECTION_TIMEOUT
     except requests.HTTPError as e:
         if e.response.status_code == requests.status_codes.codes.unauthorized:
-            print "{0}Error:{1} Unknown username or password.".format(Colours.red, Colours.end)
+            print ("{0}Error:{1} Unknown username or password.".format(Colours.red, Colours.end))
         else:
-            print "{0}Error:{1} An HTTP error has occurred with URL {2}\n{3}".format(Colours.red, Colours.end, e.request.path_url, e)
+            print ("{0}Error:{1} An HTTP error has occurred with URL {2}\n{3}".format(Colours.red, Colours.end, e.request.path_url, e))
         exit_code = ErrorCodes.CODE_CONNECTION_400_500
     except Exception as e:
         # a generic catch for any other exception
         exit_code = exit_code if exit_code != ErrorCodes.CODE_OK else ErrorCodes.CODE_EXCEPTION
-        print "{0}Error:{1} ({2}) {3}".format(Colours.red, Colours.end, e.__class__, e)
-        print "Getting a weird error? Get the latest version with 'pip install hv-uploader -U', or check for issues at https://github.com/enzienaudio/heavy/issues."
+        print ("{0}Error:{1} ({2}) {3}".format(Colours.red, Colours.end, e.__class__, e))
+        print ("Getting a weird error? Get the latest version with 'pip install hv-uploader -U', or check for issues at https://github.com/enzienaudio/heavy/issues.")
     finally:
         if temp_dir:
             shutil.rmtree(temp_dir) # delete the temporary directory no matter what
